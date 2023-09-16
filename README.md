@@ -1,7 +1,8 @@
 # test2
 
 ```mermaid
-sequenceDiagram
+# sequenceDiagram
+classDiagram
     participant User
     participant UI as "User Interface"
     participant ReservationEngine as "Reservation Engine"
