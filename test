@@ -1,47 +1,76 @@
-# test
+const express = require('express');
+const mongoose = require('mongoose');
+const swaggerJSDoc = require('swagger-jsdoc');
+const swaggerUI = require('swagger-ui-express');
 
-### 클래스 다이어그램
-``` mermaid
-classDiagram
-  class User {
-    +Username: String
-    +Password: String
-    +Email: String
-    +FirstName: String
-    +LastName: String
-    +MakeReservation(): void
-    +CancelReservation(): void
-  }
+const app = express();
+const port = 3000;
 
-  class Hotel {
-    +HotelName: String
-    +Location: String
-    +NumberOfRooms: int
-    +Room[] Rooms
-  }
+// MongoDB 연결 설정
+mongoose.connect('mongodb://localhost/mydb', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
+const db = mongoose.connection;
 
-  class Room {
-    +RoomNumber: int
-    +RoomType: String
-    +PricePerNight: float
-    +IsAvailable: boolean
-    +Reserve(): void
-    +CancelReservation(): void
-  }
+// 연결 성공 여부 확인
+db.on('error', console.error.bind(console, 'MongoDB 연결 오류:'));
+db.once('open', () => {
+  console.log('MongoDB 연결 성공');
+});
 
-  class Reservation {
-    +ReservationID: int
-    +CheckInDate: Date
-    +CheckOutDate: Date
-    +TotalPrice: float
-    +IsConfirmed: boolean
-    +ConfirmReservation(): void
-    +CancelReservation(): void
-  }
+// 사용자 프로필 모델 정의
+const userSchema = new mongoose.Schema({
+  username: String,
+  email: String,
+  // 다른 프로필 정보 필드들을 추가하세요.
+});
 
-  User -- Hotel : Makes Reservation
-  User -- Reservation : Makes Reservation
-  Hotel "1" -- "*" Room : Contains
-  Room "0..1" -- "1" Reservation : Reserved In
+const UserModel = mongoose.model('User', userSchema);
 
-```
+// Swagger 문서 옵션 설정
+const swaggerOptions = {
+  swaggerDefinition: {
+    info: {
+      title: '사용자 프로필 API',
+      version: '1.0.0',
+      description: '현재 사용자의 프로필 정보를 가져오는 API 문서',
+    },
+    servers: [{ url: `http://localhost:${port}` }],
+  },
+  apis: ['./app.js'], // 현재 파일이 있는 디렉토리에 있는 API 경로를 지정합니다.
+};
+
+const swaggerSpec = swaggerJSDoc(swaggerOptions);
+
+// Express 애플리케이션에 Swagger UI 적용
+app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerSpec));
+
+// API 엔드포인트: 현재 사용자 프로필 정보 가져오기
+/**
+ * @swagger
+ * /api/profile:
+ *   get:
+ *     summary: 현재 사용자의 프로필 정보를 가져옵니다.
+ *     responses:
+ *       200:
+ *         description: 현재 사용자의 프로필 정보를 반환합니다.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 username:
+ *                   type: string
+ *                 email:
+ *                   type: string
+ *                 // 다른 프로필 정보 필드를 추가하세요.
+ */
+app.get('/api/profile', (req, res) => {
+  // API 코드는 이전 답변의 코드를 그대로 사용합니다.
+  // ...
+});
+
+app.listen(port, () => {
+  console.log(`서버가 포트 ${port}에서 실행 중입니다.`);
+});
